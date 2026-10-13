@@ -21,6 +21,36 @@
       <button role="tab" data-p="pAnalysis"><i>🔎</i>Phân tích sâu</button>
       <button role="tab" data-p="pDetail"><i>📋</i>Danh sách issue</button>
     </nav>
+<div class="wind">
+      <svg viewBox="0 0 200 270" preserveAspectRatio="xMidYMax meet" focusable="false" aria-hidden="true">
+        <defs>
+          <radialGradient id="wSun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".45" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+          <linearGradient id="wHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity=".42"/></linearGradient>
+          <g id="wBlades"><path id="wBlade" d="M-2.6,2 C-3.4,-12 -2.2,-38 -0.7,-64 C-0.2,-66 0.6,-66 0.9,-64 C2.4,-38 3.6,-12 2.8,2 Z"/><use href="#wBlade" transform="rotate(120)"/><use href="#wBlade" transform="rotate(240)"/></g>
+          <g id="wTower"><path d="M-1.9,0 L-4,150 L4,150 L1.9,0 Z"/><path d="M0.2,0 L0.4,150 L4,150 L1.9,0 Z" fill="#000" opacity=".12"/></g>
+        </defs>
+        <circle class="w-sun" cx="168" cy="38" r="34" fill="url(#wSun)"/>
+        <g fill="#fff"><circle class="w-star" cx="22" cy="26" r="1.1"/><circle class="w-star d2" cx="58" cy="14" r="0.9"/><circle class="w-star d3" cx="96" cy="30" r="1"/><circle class="w-star d2" cx="132" cy="12" r="0.8"/><circle class="w-star" cx="12" cy="62" r="0.8"/></g>
+        <g class="w-cloud c1" fill="#fff" opacity=".28"><ellipse cx="0" cy="52" rx="20" ry="6"/><ellipse cx="-12" cy="55" rx="12" ry="5"/><ellipse cx="13" cy="55" rx="13" ry="5"/></g>
+        <g class="w-cloud c2" fill="#fff" opacity=".2"><ellipse cx="0" cy="84" rx="16" ry="5"/><ellipse cx="-10" cy="86" rx="10" ry="4"/><ellipse cx="11" cy="86" rx="11" ry="4"/></g>
+        <g stroke="#fff" stroke-linecap="round" stroke-width="1.1" fill="none"><path class="w-streak" d="M0 118h22"/><path class="w-streak s2" d="M0 150h30"/><path class="w-streak s3" d="M0 186h18"/><path class="w-streak s4" d="M0 134h26"/></g>
+        <path d="M0 238 C30 224 62 226 92 236 C124 246 160 228 200 234 L200 270 L0 270Z" fill="#fff" opacity=".1"/>
+        <!-- tuabin xa (nhỏ, chậm) -->
+        <g transform="translate(36 150) scale(.5)" fill="#fff"><g opacity=".5"><use href="#wTower"/></g><g opacity=".6"><use href="#wBlades" class="spin sb"/></g><circle r="3.4" opacity=".7"/></g>
+        <g transform="translate(168 168) scale(.38)" fill="#fff"><g opacity=".45"><use href="#wTower"/></g><g opacity=".55"><use href="#wBlades" class="spin sc"/></g><circle r="3.4" opacity=".65"/></g>
+        <path d="M0 246 C40 234 80 240 112 246 C148 253 176 240 200 244 L200 270 L0 270Z" fill="url(#wHill)"/>
+        <!-- tuabin chính -->
+        <g transform="translate(100 98)" fill="#fff">
+          <g opacity=".96"><use href="#wTower"/></g>
+          <rect x="-5" y="-6" width="15" height="11" rx="4" opacity=".98"/>
+          <g transform="translate(-0.5 0)"><use href="#wBlades" class="spin sa"/></g>
+          <circle r="4.6" cx="-0.5" fill="#fff"/><circle r="1.8" cx="-0.5" fill="currentColor" opacity=".25"/>
+          <circle class="w-beacon" cx="8" cy="-7.2" r="1.7" fill="#ff5a4d"/>
+        </g>
+        <path d="M0 256 C36 248 72 254 104 258 C140 262 172 250 200 254 L200 270 L0 270Z" fill="#000" opacity=".3"/>
+      </svg>
+      <button class="wind-toggle" type="button" aria-pressed="false" title="Tạm dừng / chạy hoạt hình tuabin" aria-label="Tạm dừng hoạt hình tuabin">⏸</button>
+    </div>
     <div class="side-foot">
       <div class="status" role="status"><span class="dot load" id="dot"></span><span id="statusTxt">Đang tải…</span></div>
       <a class="btn" id="btnPhotos" href="#" target="_blank" rel="noopener" hidden>📁 Thư mục ảnh</a>
@@ -173,7 +203,7 @@ function renderSev(rows){
   $("#tSev").textContent = m.Critical ? `${Math.round(m.Critical / total * 100)}% issue ở mức nghiêm trọng` : "Theo mức nghiêm trọng";
   if(!keys.length){ if(charts.cSev) charts.cSev.destroy(); return; }
   mkLight("cSev", { type: "bar", data: { labels: keys.map(k => SEV_VI[k] || k), datasets: [{ data: keys.map(k => m[k]), backgroundColor: keys.map(k => SEV_COLOR[k] || L.gray), borderRadius: 5, barPercentage: .62, showValues: true }] },
-    options: { layout: { padding: { top: 18 } }, plugins: { legend: { display: false } }, scales: lightScales({ title: { display: true, text: "Số issue" } }) } });
+    options: { layout: { padding: { top: 18 } }, plugins: { legend: { display: false } }, scales: lightScales({ title: { display: true, text: "Số issue" } }, { ticks: { autoSkip: false, maxRotation: 0, font: { size: 11 } } }) } });
 }
 
 function renderTypes(rows){

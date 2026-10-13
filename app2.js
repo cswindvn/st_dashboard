@@ -45,3 +45,12 @@ const dayChip = d => `<span class="hc ${d <= 3 ? "r" : d <= 7 ? "o" : d <= 14 ? 
 const sevOf = type => { const t = String(type || "").toLowerCase(); const f = DATA.issueTypes.find(x => String(x.name).toLowerCase() === t); return f ? f.severity : ""; };
 function setPill(txt){ $("#pillTitle").textContent = txt; }
 function setUpdated(){ const u = $("#updated"); if(u && DATA.updatedAt) u.innerHTML = `Cập nhật đến<b>${DATA.updatedAt.toLocaleDateString("vi-VN")} ${DATA.updatedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</b>`; }
+
+/* Nút tạm dừng/chạy hoạt hình tuabin ở thanh bên (nhớ lựa chọn trong trình duyệt) */
+(function(){
+  const w = document.querySelector(".wind"), b = document.querySelector(".wind-toggle"); if(!w || !b) return;
+  const set = p => { w.classList.toggle("paused", p); b.textContent = p ? "▶" : "⏸"; b.setAttribute("aria-pressed", String(p)); b.setAttribute("aria-label", p ? "Chạy hoạt hình tuabin" : "Tạm dừng hoạt hình tuabin"); };
+  let p = false; try{ p = localStorage.getItem("issueDash.windPaused") === "1"; }catch(e){}
+  set(p);
+  b.onclick = () => { p = !p; set(p); try{ localStorage.setItem("issueDash.windPaused", p ? "1" : "0"); }catch(e){} };
+})();
