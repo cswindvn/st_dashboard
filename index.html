@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue sơn - Đội thi công</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="style2.css">
+</head>
+<body>
+<div class="app t-blue">
+  <aside class="side">
+    <div class="logo"><div class="lg" aria-hidden="true">🎨</div><div class="lt">ISSUE SƠN<small>Đội thi công · toàn nhà máy</small></div></div>
+    <nav class="tabs" role="tablist" aria-label="Điều hướng">
+      <button role="tab" data-p="pOverview"><i>🏠</i>Tổng quan</button>
+      <button role="tab" data-p="pCompare"><i>📊</i>So sánh tuần</button>
+      <button role="tab" data-p="pAnalysis"><i>🔎</i>Phân tích sâu</button>
+      <button role="tab" data-p="pDetail"><i>📋</i>Danh sách issue</button>
+    </nav>
+    <div class="side-foot">
+      <div class="status" role="status"><span class="dot load" id="dot"></span><span id="statusTxt">Đang tải…</span></div>
+      <a class="btn" id="btnPhotos" href="#" target="_blank" rel="noopener" hidden>📁 Thư mục ảnh</a>
+      <button class="btn" id="btnRefresh">⟳ Làm mới</button>
+      <button class="btn" id="btnTv" title="Ẩn menu và bộ lọc để chiếu lên màn hình">Chế độ TV</button>
+      <button class="btn" id="btnTheme" hidden>Sáng / Tối</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="banner" id="banner"></div>
+    <div class="topbar">
+      <span class="pill" id="pillTitle">1. DASHBOARD TỔNG QUAN – SUMMARY</span>
+      <div>
+        <section class="filters" id="filters" aria-label="Bộ lọc"></section>
+        <button class="btn" id="btnResetTop">Đặt lại bộ lọc</button>
+        <div class="updated" id="updated">Cập nhật đến<b>…</b></div>
+      </div>
+    </div>
+
+    <!-- 1. Tổng quan -->
+    <section class="pane" id="pOverview">
+      <div class="insight" id="insight"><h1 id="headline">Đang tải dữ liệu…</h1><p id="subline"></p></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="grid">
+        <div class="card s4"><h2>Issue theo nhà máy</h2><p class="sub">Bấm vào một nhà máy để lọc</p><div class="donut"><div class="chart"><canvas id="cFactory" role="img" aria-label="Biểu đồ vòng issue theo nhà máy"></canvas></div><div class="lglist" id="lgFactory"></div></div></div>
+        <div class="card s4"><h2>Issue theo khách hàng</h2><p class="sub">Bấm vào một khách hàng để lọc</p><div class="donut"><div class="chart"><canvas id="cCust" role="img" aria-label="Biểu đồ vòng issue theo khách hàng"></canvas></div><div class="lglist" id="lgCust"></div></div></div>
+        <div class="card s4"><h2 id="tSev" class="act">Theo mức nghiêm trọng</h2><p class="sub">Mức lấy từ bảng MASTER_ISSUE_TYPE</p><div class="chart"><canvas id="cSev" role="img" aria-label="Biểu đồ cột issue theo mức nghiêm trọng"></canvas></div></div>
+      </div>
+      <div class="grid">
+        <div class="card s7"><h2 id="tTypes" class="act">Top loại lỗi</h2><p class="sub">Màu cột theo mức nghiêm trọng: đỏ = Nghiêm trọng, cam = Cao, vàng = Trung bình, xanh = Thấp. Bấm vào cột để lọc.</p><div class="chart" style="height:250px"><canvas id="cTypes" role="img" aria-label="Biểu đồ cột top loại lỗi"></canvas></div></div>
+        <div class="card s5"><h2>Issue nghiêm trọng gần nhất</h2><p class="sub">Ô màu là số ngày trước: càng mới càng đỏ</p><div class="tw" id="critList"></div></div>
+      </div>
+      <div class="grid">
+        <div class="card s7"><h2 id="tTrend" class="act">Xu hướng theo công đoạn</h2><p class="sub" id="sTrend"></p>
+          <div style="margin-bottom:6px" id="segTrend"><button class="btn" data-v="day">Ngày</button> <button class="btn" data-v="week">Tuần</button> <button class="btn" data-v="month">Tháng</button></div>
+          <div class="chart" style="height:240px"><canvas id="cTrend" role="img" aria-label="Biểu đồ đường số issue theo công đoạn"></canvas></div></div>
+        <div class="card s5"><h2 id="tProject" class="act">Dự án</h2><p class="sub">Top 8 dự án có nhiều issue nhất. Bấm để lọc.</p><div id="projects"></div></div>
+      </div>
+      <div class="grid"><div class="card s12"><h2>Issue sơn mới nhất</h2><p class="sub">Bấm vào ảnh để xem lớn kèm chi tiết; nút "Mở thư mục" mở thư mục ảnh trên Google Drive.</p><div class="tw" id="latest"></div></div></div>
+    </section>
+
+    <!-- 2. So sánh tuần -->
+    <section class="pane" id="pCompare">
+      <div class="card"><h2 id="tCmp" class="act">So sánh 2 tuần liên tiếp</h2>
+        <p class="sub"><label class="cmpsel">Tuần xem: <select id="cmpWeek" aria-label="Chọn tuần so sánh"></select></label> · tuần được so với tuần liền trước, theo các bộ lọc ở trên (trừ thời gian)</p>
+        <div id="cmp"></div></div>
+    </section>
+
+    <!-- 3. Phân tích sâu -->
+    <section class="pane" id="pAnalysis">
+      <div class="grid">
+        <div class="card s7"><h2 id="tHeat" class="act">Loại lỗi theo nhà máy</h2><p class="sub">Ô càng đậm càng nhiều issue.</p><div class="tw" id="heat"></div></div>
+        <div class="card s5"><h2>Công đoạn phát sinh issue</h2><p class="sub">Bấm để lọc.</p><div id="process"></div></div>
+      </div>
+      <div class="grid">
+        <div class="card s7"><h2 id="tRepeat" class="act">Section lặp lại issue</h2><p class="sub">Section có từ 2 issue trở lên trong kỳ — cần kiểm tra quy trình sơn.</p><div class="tw" id="repeat"></div></div>
+        <div class="card s5"><h2>Công đoạn × loại lỗi</h2><p class="sub">Loại lỗi nhiều nhất ở từng công đoạn.</p><div id="process2"></div></div>
+      </div>
+    </section>
+
+    <!-- 4. Danh sách -->
+    <section class="pane" id="pDetail">
+      <div class="card">
+        <h2 id="tDetail" class="act">Danh sách issue</h2>
+        <p class="sub"><input id="q" class="search" type="search" placeholder="Tìm mô tả, section, dự án…" aria-label="Tìm kiếm" style="padding:6px 10px;width:280px;max-width:70vw"> <button class="btn" id="btnCsv">Tải CSV</button></p>
+        <div class="tw" id="detail"></div>
+        <div class="pager" id="pager"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="app2.js"></script>
+<script>
+const DEFAULTS = { range: "30", from: "", to: "", factory: "", customer: "", project: "", process: "", type: "", q: "" };
+const F = { ...DEFAULTS };
+const DEFS = [["factory","Nhà máy","factory"],["customer","Khách hàng","customer"],["project","Dự án","project"],["process","Công đoạn","process"],["type","Loại lỗi","type"]];
+const RANGE_LBL = { all: "toàn bộ thời gian", today: "hôm nay", 7: "7 ngày qua", 30: "30 ngày qua", 90: "90 ngày qua", custom: "khoảng đã chọn" };
+const PILLS = { pOverview: "1. DASHBOARD TỔNG QUAN – SUMMARY", pCompare: "2. SO SÁNH TUẦN – WEEK COMPARE", pAnalysis: "3. PHÂN TÍCH SÂU – ANALYSIS", pDetail: "4. DANH SÁCH ISSUE – ISSUE LIST" };
+let trendMode = "day", cmpWeek = "";
+
+const detail = makeDetail({
+  el: $("#detail"), pager: $("#pager"), name: "issue_son",
+  search: i => [i.desc, i.section, i.project, i.type, i.customer].join(" "),
+  cols: [
+    { k:"date", t:"Thời gian", val:i=>i.date.getTime(), html:i=>i.date.toLocaleString("vi-VN",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) },
+    { k:"factory", t:"Nhà máy", val:i=>i.factory, html:i=>esc(i.factory) },
+    { k:"customer", t:"Khách hàng", val:i=>i.customer, html:i=>esc(i.customer) },
+    { k:"project", t:"Dự án", val:i=>i.project, html:i=>esc(i.project) },
+    { k:"section", t:"Section", val:i=>i.section, html:i=>esc(i.section) },
+    { k:"process", t:"Công đoạn", val:i=>i.process, html:i=>esc(i.process) },
+    { k:"type", t:"Loại lỗi", val:i=>i.type, html:i=>`<span class="tag${/critical/i.test(i.severity)?" crit":""}">${esc(shortType(i.type))}</span>` },
+    { k:"desc", t:"Mô tả", cls:"desc", val:i=>i.desc, html:i=>esc(i.desc) },
+    { k:"photos", t:"Ảnh gốc", val:i=>i.photos, html:i=>photoLink(i) }
+  ],
+  csv: [["Timestamp",i=>i.ts],["Customer",i=>i.customer],["Project",i=>i.project],["Factory",i=>i.factory],["Section ID",i=>i.section],["Process",i=>i.process],["Issue Type",i=>i.type],["Description",i=>i.desc],["Photo Folder",i=>i.folder],["Photo Count",i=>i.photos]]
+});
+
+const matchesNonDate = i => DEFS.every(([k,,f]) => !F[k] || i[f] === F[k]);
+function filtered(){ const { from, to } = rangeBounds(F); return DATA.issues.filter(i => matchesNonDate(i) && (!from || i.date >= from) && (!to || i.date <= to)); }
+function previousPeriod(){
+  const { from, to } = rangeBounds(F); if(!from) return null;
+  const len = (to || new Date()) - from, pFrom = new Date(from - len - 1), pTo = new Date(from - 1);
+  return DATA.issues.filter(i => matchesNonDate(i) && i.date >= pFrom && i.date <= pTo);
+}
+const pct = (cur, prev) => prev ? Math.round((cur - prev) / prev * 100) : null;
+const scopeText = () => DEFS.filter(([k]) => F[k]).map(([k]) => F[k]).join(" · ");
+function pick(k, v){ F[k] = F[k] === v ? "" : v; detail.resetPage(); refreshFilters(); render(); }
+
+function renderHero(rows, prev){
+  const topT = countBy(rows, i => i.type)[0], d = pct(rows.length, prev ? prev.length : 0);
+  let h;
+  if(!rows.length) h = `Không có issue nào trong ${RANGE_LBL[F.range] || ""}.`;
+  else { h = `${fmt(rows.length)} issue trong ${RANGE_LBL[F.range]}`; if(d !== null) h += d === 0 ? ", bằng kỳ trước" : d > 0 ? `, tăng ${d}% so với kỳ trước` : `, giảm ${-d}% so với kỳ trước`; h += "."; }
+  $("#headline").textContent = h;
+  let sub = topT ? `${shortType(topT[0])} chiếm ${Math.round(topT[1] / rows.length * 100)}% (${fmt(topT[1])} issue) — nên xử lý đầu tiên.` : "";
+  if(scopeText()) sub += (sub ? " " : "") + `Đang lọc: ${scopeText()}.`;
+  $("#subline").textContent = sub;
+}
+
+function renderKpis(rows, prev){
+  const now = new Date(), today = ymd(now), wk = weekStart(now), mo = new Date(now.getFullYear(), now.getMonth(), 1);
+  const base = DATA.issues.filter(matchesNonDate);
+  const crit = rows.filter(i => /critical/i.test(i.severity)).length, topProj = countBy(rows, i => i.project)[0], d = pct(rows.length, prev ? prev.length : 0);
+  // tuần này (đến hiện tại) so với tuần trước cùng thời điểm
+  const span = now - wk, wPrev = addDays(wk, -7);
+  const wCur = base.filter(i => i.date >= wk).length, wOld = base.filter(i => i.date >= wPrev && i.date < new Date(+wPrev + span)).length, wd = pct(wCur, wOld);
+  const arrow = x => x === null ? "" : x > 0 ? `<b style="color:var(--bad)">▲ ${x}%</b>` : x < 0 ? `<b style="color:var(--ok)">▼ ${-x}%</b>` : "<b>= 0%</b>";
+  $("#kpis").innerHTML = [
+    { cls: "blue", icon: "🧾", label: "Tổng issue", value: fmt(rows.length), sub: prev ? `${arrow(d)} so kỳ trước (${fmt(prev.length)})` : "toàn bộ dữ liệu" },
+    { cls: "green", icon: "📅", label: "Hôm nay", value: fmt(base.filter(i => i.day === today).length), sub: `tuần này ${fmt(wCur)} · tháng này ${fmt(base.filter(i => i.date >= mo).length)}` },
+    { cls: "red", icon: "⚠️", label: "Issue nghiêm trọng", value: fmt(crit), sub: `${rows.length ? Math.round(crit / rows.length * 100) : 0}% tổng issue` },
+    { cls: "orange", icon: "📈", label: "Tuần này so tuần trước", value: fmt(wCur), sub: wOld || wCur ? `${arrow(wd) || "mới"} (tuần trước cùng thời điểm: ${fmt(wOld)})` : "chưa có issue" },
+    { cls: "purple", icon: "🏗️", label: "Dự án nhiều issue nhất", value: topProj ? topProj[0] : "—", sub: topProj ? `${fmt(topProj[1])} issue` : "", txt: true }
+  ].map(kcard).join("");
+}
+
+function renderDonuts(rows){
+  donutCard({ canvas: "cFactory", legend: "lgFactory", list: countBy(rows, i => i.factory), colors: [L.blue, L.teal, L.purple, L.orange], label: "issue", onPick: n => pick("factory", n) });
+  let list = countBy(rows, i => i.customer); if(list.length > 5){ const rest = list.slice(4).reduce((s, x) => s + x[1], 0); list = list.slice(0, 4).concat([["Khác", rest]]); }
+  donutCard({ canvas: "cCust", legend: "lgCust", list, colors: [L.blue, L.green, L.orange, L.purple, L.gray], label: "issue", onPick: n => { if(n !== "Khác") pick("customer", n); } });
+}
+
+function renderSev(rows){
+  const m = {}; rows.forEach(i => { const s = SEV_ORDER.includes(i.severity) ? i.severity : "Khác"; m[s] = (m[s] || 0) + 1; });
+  const keys = SEV_ORDER.concat(["Khác"]).filter(k => m[k]), total = rows.length || 1;
+  $("#tSev").textContent = m.Critical ? `${Math.round(m.Critical / total * 100)}% issue ở mức nghiêm trọng` : "Theo mức nghiêm trọng";
+  if(!keys.length){ if(charts.cSev) charts.cSev.destroy(); return; }
+  mkLight("cSev", { type: "bar", data: { labels: keys.map(k => SEV_VI[k] || k), datasets: [{ data: keys.map(k => m[k]), backgroundColor: keys.map(k => SEV_COLOR[k] || L.gray), borderRadius: 5, barPercentage: .62, showValues: true }] },
+    options: { layout: { padding: { top: 18 } }, plugins: { legend: { display: false } }, scales: lightScales({ title: { display: true, text: "Số issue" } }) } });
+}
+
+function renderTypes(rows){
+  const total = rows.length, types = countBy(rows, i => i.type).slice(0, 8);
+  const top3 = types.slice(0, 3).reduce((s, x) => s + x[1], 0);
+  $("#tTypes").textContent = types.length ? `${Math.min(3, types.length)} loại lỗi đầu chiếm ${Math.round(top3 / (total || 1) * 100)}% tổng issue` : "Top loại lỗi";
+  if(!types.length){ if(charts.cTypes) charts.cTypes.destroy(); return; }
+  mkLight("cTypes", { type: "bar", data: { labels: types.map(x => shortType(x[0])), datasets: [{ data: types.map(x => x[1]), backgroundColor: types.map(x => SEV_COLOR[sevOf(x[0])] || L.blue), borderRadius: 4, barPercentage: .7, showValues: true }] },
+    options: { indexAxis: "y", layout: { padding: { right: 28 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${fmt(c.raw)} issue (${Math.round(c.raw / (total || 1) * 100)}%) · ${SEV_VI[sevOf(types[c.dataIndex][0])] || "chưa phân mức"}` } } },
+      scales: { x: { beginAtZero: true, grid: { color: "#E8EDF5" }, border: { display: false }, ticks: { precision: 0 } }, y: { grid: { display: false }, ticks: { autoSkip: false } } },
+      onClick: (ev, els) => { if(els.length) pick("type", types[els[0].index][0]); }, onHover: (ev, els) => { ev.native.target.style.cursor = els.length ? "pointer" : "default"; } } });
+}
+
+function renderCrit(rows){
+  const now = new Date(), list = rows.filter(i => /critical/i.test(i.severity)).slice(0, 5);
+  $("#critList").innerHTML = list.length ? `<table><thead><tr><th>Section</th><th>Loại lỗi</th><th>Dự án</th><th>Ngày trước</th></tr></thead><tbody>` +
+    list.map(i => `<tr><td>${esc(i.section)}</td><td><span class="tag crit">${esc(shortType(i.type))}</span></td><td>${esc(i.project)}</td><td>${dayChip(Math.max(0, Math.floor((now - i.date) / 864e5)))}</td></tr>`).join("") + `</tbody></table>`
+    : `<div class="empty">Không có issue nghiêm trọng trong bộ lọc này.</div>`;
+}
+
+const keyOfD = d => trendMode === "day" ? ymd(d) : trendMode === "week" ? ymd(weekStart(d)) : `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+function bucketKeys(rows){
+  const ks = [...new Set(rows.map(i => keyOfD(i.date)))].sort(); if(!ks.length) return [];
+  if(trendMode === "month") return ks;
+  const step = trendMode === "day" ? 1 : 7, out = [], d = new Date(ks[0] + "T00:00:00"), end = new Date(ks[ks.length - 1] + "T00:00:00");
+  for(; d <= end; d.setDate(d.getDate() + step)) out.push(ymd(d)); return out;
+}
+function renderTrend(rows){
+  $("#segTrend").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === trendMode));
+  const keys = bucketKeys(rows);
+  if(!keys.length){ $("#tTrend").textContent = "Chưa có issue để vẽ xu hướng"; $("#sTrend").textContent = ""; if(charts.cTrend) charts.cTrend.destroy(); return; }
+  const procs = countBy(rows, i => i.process).slice(0, 4), unit = { day: "ngày", week: "tuần", month: "tháng" }[trendMode], cols = [L.blue, L.green, L.orange, L.purple];
+  $("#tTrend").textContent = `Xu hướng theo công đoạn: ${procs[0][0]} nhiều nhất (${procs[0][1]} issue)`;
+  $("#sTrend").textContent = `Số issue mỗi ${unit}, tối đa 4 công đoạn nhiều nhất.`;
+  mkLight("cTrend", { type: "line", data: { labels: keys.map(k => trendMode === "month" ? k : dmy(new Date(k + "T00:00:00"))), datasets: procs.map(([name], si) => {
+      const m = new Map(); rows.filter(i => (i.process || "(trống)") === name).forEach(i => { const k = keyOfD(i.date); m.set(k, (m.get(k) || 0) + 1); });
+      return { label: name, data: keys.map(k => m.get(k) || 0), borderColor: cols[si], backgroundColor: cols[si] + "22", borderWidth: 2.4, cubicInterpolationMode: "monotone", pointRadius: keys.length > 20 ? 0 : 3, pointBackgroundColor: cols[si], fill: true }; }) },
+    options: { plugins: { legend: { position: "top", align: "start", labels: { usePointStyle: true, boxWidth: 8 } } }, interaction: { mode: "index", intersect: false },
+      scales: lightScales({ title: { display: true, text: "Số issue" } }, { ticks: { maxTicksLimit: 10, maxRotation: 0 } }) } });
+}
+
+function renderRanks(rows){
+  const total = rows.length, projs = countBy(rows, i => i.project).slice(0, 8);
+  $("#tProject").textContent = projs[0] ? `${projs[0][0]} có nhiều issue nhất (${projs[0][1]})` : "Dự án";
+  rankBars($("#projects"), projs, { total, active: F.project, onPick: n => pick("project", n) });
+  rankBars($("#process"), countBy(rows, i => i.process), { total, active: F.process, onPick: n => pick("process", n) });
+  const byP = new Map(); rows.forEach(i => { const q = i.process || "(trống)"; if(!byP.has(q)) byP.set(q, []); byP.get(q).push(i); });
+  $("#process2").innerHTML = byP.size ? `<table><thead><tr><th>Công đoạn</th><th>Issue</th><th>Loại lỗi nhiều nhất</th></tr></thead><tbody>` + [...byP.entries()].sort((x, y) => y[1].length - x[1].length).map(([q, l]) => { const t = countBy(l, i => i.type)[0]; return `<tr><td>${esc(q)}</td><td><b>${l.length}</b></td><td><span class="tag">${esc(shortType(t[0]))}</span> ${t[1]}</td></tr>`; }).join("") + "</tbody></table>" : `<div class="empty">Không có dữ liệu</div>`;
+}
+
+function renderHeat(rows){
+  const facs = [...new Set(rows.map(i => i.factory).filter(Boolean))].sort(), types = countBy(rows, i => i.type).slice(0, 12).map(x => x[0]);
+  if(!rows.length){ $("#heat").innerHTML = `<div class="empty">Không có dữ liệu</div>`; return; }
+  const m = {}; let max = 1, best = null;
+  rows.forEach(i => { const k = i.type + "|" + i.factory; m[k] = (m[k] || 0) + 1; if(m[k] > max) max = m[k]; if(!best || m[k] > best[1]) best = [k, m[k]]; });
+  const [bt, bf] = best[0].split("|");
+  $("#tHeat").textContent = `${shortType(bt)} tập trung ở ${bf} (${best[1]} issue)`;
+  $("#heat").innerHTML = `<table class="heat"><thead><tr><th>Loại lỗi</th>${facs.map(f => `<th>${esc(f)}</th>`).join("")}</tr></thead><tbody>` +
+    types.map(t => `<tr><td>${esc(shortType(t))}</td>${facs.map(f => { const v = m[t + "|" + f] || 0, a = v ? Math.round((0.12 + 0.75 * v / max) * 100) : 0;
+      return `<td style="background:${v ? `color-mix(in srgb, #1F6FEB ${a}%, transparent)` : "transparent"};font-weight:${v ? 700 : 400}">${v || "·"}</td>`; }).join("")}</tr>`).join("") + `</tbody></table>`;
+}
+
+function renderRepeat(rows){
+  const m = new Map();
+  rows.forEach(i => { if(!i.section) return; const e = m.get(i.section) || { n: 0, project: i.project, factory: i.factory, types: new Set(), last: i.date }; e.n++; e.types.add(shortType(i.type)); if(i.date > e.last) e.last = i.date; m.set(i.section, e); });
+  const list = [...m.entries()].filter(([,e]) => e.n >= 2).sort((a,b) => b[1].n - a[1].n || b[1].last - a[1].last).slice(0, 12);
+  $("#tRepeat").textContent = list.length ? `${list.length} section bị lặp issue trong kỳ` : "Không có section nào lặp issue";
+  if(!list.length){ $("#repeat").innerHTML = `<div class="empty">Không có section nào bị lặp issue trong bộ lọc này.</div>`; return; }
+  $("#repeat").innerHTML = `<table><thead><tr><th>Section</th><th>Dự án</th><th>Nhà máy</th><th>Issue</th><th>Loại lỗi</th></tr></thead><tbody>` +
+    list.map(([s,e]) => `<tr><td>${esc(s)}</td><td>${esc(e.project)}</td><td>${esc(e.factory)}</td><td><span class="hc ${e.n >= 4 ? "r" : e.n === 3 ? "o" : "y"}">${e.n}</span></td><td>${[...e.types].map(t => `<span class="tag">${esc(t)}</span>`).join(" ")}</td></tr>`).join("") + `</tbody></table>`;
+}
+
+function renderCmp(){
+  const cur = weekStart(new Date()), sel = $("#cmpWeek");
+  if(!sel.options.length) sel.innerHTML = Array.from({ length: 8 }, (_, k) => addDays(cur, -7 * k)).map((w, k) => `<option value="${k ? ymd(w) : ""}">${k === 0 ? "Tuần này" : k === 1 ? "Tuần trước" : "Tuần"} (${dmy(w)} – ${dmy(addDays(w, 6))})</option>`).join("");
+  sel.value = cmpWeek;
+  renderWeekCompare({ el: $("#cmp"), titleEl: $("#tCmp"), rows: DATA.issues.filter(matchesNonDate), w: cmpWeek ? new Date(cmpWeek + "T00:00:00") : cur,
+    dims: [["Loại lỗi", i => i.type], ["Nhà máy", i => i.factory], ["Dự án", i => i.project], ["Công đoạn", i => i.process], ["Khách hàng", i => i.customer]], shorten: shortType });
+}
+
+function render(){
+  writeHash(F, DEFAULTS);
+  const rows = filtered(), prev = previousPeriod();
+  renderHero(rows, prev); renderKpis(rows, prev); renderDonuts(rows); renderSev(rows); renderTypes(rows); renderCrit(rows);
+  renderTrend(rows); renderRanks(rows); renderHeat(rows); renderRepeat(rows); renderCmp();
+  latestTable($("#latest"), rows, { n: 8 });
+  $("#tDetail").textContent = `${fmt(rows.length)} issue khớp bộ lọc`;
+  detail.render(rows, F.q); setUpdated();
+}
+function refreshFilters(){ buildFilters($("#filters"), F, DEFS, DEFAULTS, DATA.issues, () => { $("#q").value = F.q; detail.resetPage(); render(); }, { range: true }); }
+function onData(themeOnly){ if(!themeOnly) refreshFilters(); render(); }
+
+$("#cmpWeek").addEventListener("change", e => { cmpWeek = e.target.value; renderCmp(); });
+$("#q").addEventListener("input", e => { F.q = e.target.value; detail.resetPage(); detail.render(filtered(), F.q); writeHash(F, DEFAULTS); });
+$("#btnCsv").onclick = () => detail.exportCsv();
+$("#btnResetTop").onclick = () => { const b = document.querySelector("#filters [data-reset]"); if(b) b.click(); };
+$("#segTrend").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; trendMode = b.dataset.v; renderTrend(filtered()); });
+
+readHash(F); $("#q").value = F.q;
+initTabs(id => setPill(PILLS[id]));
+startApp({ view: "paint", onData });
+</script>
+</body>
+</html>
