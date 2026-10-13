@@ -212,3 +212,8 @@ table small{font-size:11.5px}
   .spin{animation:wSpin 16s linear infinite!important}
   .spin.sa{animation-duration:14s!important}.spin.sb{animation-duration:20s!important}.spin.sc{animation-duration:24s!important}
 }
+
+/* Cổng nhập mã nằm ngoài .app nên không thừa hưởng --pill: đặt màu nút rõ ràng */
+.gate-box .btn{background:#6A45C9;border-color:#6A45C9;color:#fff}
+.gate-box .btn:hover{background:#5636B0}
+.gate-box input:focus-visible{outline:2px solid #6A45C9;outline-offset:1px}
